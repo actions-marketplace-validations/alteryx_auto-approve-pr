@@ -19,6 +19,10 @@ inputs:
     description: 'The search criteria to use for pull requests'
     default: 'status:success review:required'
     required: false
+  comment-body:
+    description: 'The comment to leave when auto approving '
+    default: 'auto approve'
+    required: false
   github-token:
     description: 'The PAT token to use'
     required: true
@@ -29,7 +33,7 @@ runs:
       id: find_pr
       run: |
         gh auth status
-        gh pr list --repo "${{ inputs.repository }}" --assignee "${{ inputs.assignee }}" --base "${{ inputs.base }}" --state "${{ inputs.state }}" --search "${{ inputs.search}}" --limit 1 --json number > pull_request.json
+        gh pr list --repo "${{ inputs.repository }}" --assignee "${{ inputs.assignee }}" --base "${{ inputs.base }}" --state "${{ inputs.state }}" --search "${{ inputs.search }}" --limit 1 --json number > pull_request.json
         pull_request=$(cat pull_request.json | grep -Eo "[0-9]*")
         echo ::set-output name=pull_request::${pull_request}
       env:
@@ -37,7 +41,7 @@ runs:
     - name: Approve PR and enable auto-merge
       if: ${{ steps.find_pr.outputs.pull_request > 1 }}
       run: |
-        gh pr review --repo "${{ inputs.repository }}" --comment --body "auto approve" ${{ steps.find_pr.outputs.pull_request }}
+        gh pr review --repo "${{ inputs.repository }}" --comment --body "${{ inputs.repository }}" ${{ steps.find_pr.outputs.pull_request }}
         gh pr review --repo "${{ inputs.repository }}" --approve ${{ steps.find_pr.outputs.pull_request }}
         gh pr merge --repo "${{ inputs.repository }}" --auto --squash --delete-branch ${{ steps.find_pr.outputs.pull_request }}
       env:
