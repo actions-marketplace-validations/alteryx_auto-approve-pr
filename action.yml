@@ -46,3 +46,6 @@ runs:
         gh pr merge --repo "${{ inputs.repository }}" --auto --squash --delete-branch ${{ steps.find_pr.outputs.pull_request }}
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
+branding:
+  icon: 'align-center'  
+  color: 'green'
