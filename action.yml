@@ -1,0 +1,44 @@
+name: 'Auto Approve PR'
+description: 'Greet someone'
+inputs:
+  repository:  
+    description: 'The name of the repository (with organization)'
+    required: true
+  assignee:  
+    description: 'The assignee to look for when searching for pull requests'
+    required: true
+  base:
+    description: 'The base branch to use for searching'
+    default: 'main'
+    required: false
+  state:
+    description: 'The state of the pull request to look for'
+    default: 'open'
+    required: false
+  search:
+    description: 'The search criteria to use for pull requests'
+    default: 'status:success review:required'
+    required: false
+  github-token:
+    description: 'The PAT token to use'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Find PR
+      id: find_pr
+      run: |
+        gh auth status
+        gh pr list --repo "${{ inputs.repository }}" --assignee "${{ inputs.assignee }}" --base "${{ inputs.base }}" --state "${{ inputs.state }}" --search "${{ inputs.search}}" --limit 1 --json number > pull_request.json
+        pull_request=$(cat pull_request.json | grep -Eo "[0-9]*")
+        echo ::set-output name=pull_request::${pull_request}
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+    - name: Approve PR and enable auto-merge
+      if: ${{ steps.find_pr.outputs.pull_request > 1 }}
+      run: |
+        gh pr review --repo "${{ inputs.repository }}" --comment --body "auto approve" ${{ steps.find_pr.outputs.pull_request }}
+        gh pr review --repo "${{ inputs.repository }}" --approve ${{ steps.find_pr.outputs.pull_request }}
+        gh pr merge --repo "${{ inputs.repository }}" --auto --squash --delete-branch ${{ steps.find_pr.outputs.pull_request }}
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
