@@ -1,5 +1,5 @@
 name: 'Auto Approve PR'
-description: 'Greet someone'
+description: 'auto approve and merge pull requests'
 inputs:
   repository:  
     description: 'The name of the repository (with organization)'
