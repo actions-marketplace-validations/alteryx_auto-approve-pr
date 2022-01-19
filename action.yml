@@ -31,6 +31,7 @@ runs:
   steps:
     - name: Find PR
       id: find_pr
+      shell: bash
       run: |
         gh auth status
         gh pr list --repo "${{ inputs.repository }}" --assignee "${{ inputs.assignee }}" --base "${{ inputs.base }}" --state "${{ inputs.state }}" --search "${{ inputs.search }}" --limit 1 --json number > pull_request.json
@@ -40,6 +41,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github-token }}
     - name: Approve PR and enable auto-merge
       if: ${{ steps.find_pr.outputs.pull_request > 1 }}
+      shell: bash
       run: |
         gh pr review --repo "${{ inputs.repository }}" --comment --body "${{ inputs.repository }}" ${{ steps.find_pr.outputs.pull_request }}
         gh pr review --repo "${{ inputs.repository }}" --approve ${{ steps.find_pr.outputs.pull_request }}
